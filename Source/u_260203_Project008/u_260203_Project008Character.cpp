@@ -10,6 +10,7 @@
 #include "EnhancedInputComponent.h"
 #include "EnhancedInputSubsystems.h"
 #include "InputActionValue.h"
+#include "NewGameState.h"
 #include "Blueprint/UserWidget.h"
 
 DEFINE_LOG_CATEGORY(LogTemplateCharacter);
@@ -62,12 +63,23 @@ void Au_260203_Project008Character::BeginPlay()
 {
 	Super::BeginPlay();
 	
-	if (HUDWidgetClass)
+	if (HUDWidgetStart)
 	{
-		UUserWidget* HUDWidget = CreateWidget<UUserWidget>(GetWorld(), HUDWidgetClass);
-		if (HUDWidget)
+		ChangeMenuWidget(HUDWidgetStart);
+
+		FInputModeUIOnly InputMode;
+		// Optional: Focus the widget so keyboard navigation works
+		if (CurrentWidget)
 		{
-			HUDWidget->AddToViewport();
+			InputMode.SetWidgetToFocus(CurrentWidget->TakeWidget());
+			InputMode.SetLockMouseToViewportBehavior(EMouseLockMode::DoNotLock);
+		}
+
+		APlayerController* PC = Cast<APlayerController>(GetController());
+		if (PC)
+		{
+			PC->SetInputMode(InputMode);
+			PC->bShowMouseCursor = true;
 		}
 	}
 }
@@ -112,6 +124,9 @@ void Au_260203_Project008Character::SetupPlayerInputComponent(UInputComponent* P
 
 void Au_260203_Project008Character::Move(const FInputActionValue& Value)
 {
+	ANewGameState* GS = GetWorld()->GetGameState<ANewGameState>();
+	if (!GS || GS->CurrentState != EMatchState::Playing) return;
+
 	// input is a Vector2D
 	FVector2D MovementVector = Value.Get<FVector2D>();
 
@@ -135,6 +150,9 @@ void Au_260203_Project008Character::Move(const FInputActionValue& Value)
 
 void Au_260203_Project008Character::Look(const FInputActionValue& Value)
 {
+	ANewGameState* GS = GetWorld()->GetGameState<ANewGameState>();
+	if (!GS || GS->CurrentState != EMatchState::Playing) return;
+
 	// input is a Vector2D
 	FVector2D LookAxisVector = Value.Get<FVector2D>();
 
@@ -149,6 +167,10 @@ void Au_260203_Project008Character::Look(const FInputActionValue& Value)
 int32 Au_260203_Project008Character::GetHealth() const
 {
 	return FMath::RoundToInt(Health);
+}
+int32 Au_260203_Project008Character::GetMaxHealth() const
+{
+	return FMath::RoundToInt(MaxHealth);
 }
 
 void Au_260203_Project008Character::AddHealth(float Amount)
@@ -178,4 +200,61 @@ void Au_260203_Project008Character::OnDeath()
 {
 	UE_LOG(LogTemplateCharacter, Warning, TEXT("%s has died."), *GetName());
 
+}
+
+void Au_260203_Project008Character::ChangeMenuWidget(TSubclassOf<UUserWidget> NewWidgetClass)
+{
+	// 1. Remove the current widget if it exists
+	if (CurrentWidget)
+	{
+		CurrentWidget->RemoveFromParent();
+		CurrentWidget = nullptr;
+	}
+
+	// 2. Create and add the new widget
+	if (NewWidgetClass)
+	{
+		CurrentWidget = CreateWidget<UUserWidget>(GetWorld(), NewWidgetClass);
+		if (CurrentWidget)
+		{
+			CurrentWidget->AddToViewport();
+		}
+	}
+}
+void Au_260203_Project008Character::StartGame()
+{
+	ChangeMenuWidget(HUDWidgetIngame);
+
+	FInputModeGameOnly InputMode;
+
+	APlayerController* PC = Cast<APlayerController>(GetController());
+	if (PC)
+	{
+		PC->SetInputMode(InputMode);
+		PC->bShowMouseCursor = false;
+	}
+
+	ANewGameState* GS = GetWorld()->GetGameState<ANewGameState>();
+	if (GS)
+	{
+		GS->StartGame();
+	}
+}
+void Au_260203_Project008Character::EndGame()
+{
+	ChangeMenuWidget(HUDWidgetEnd);
+
+	// Set Input to UI Only so they can click Restart
+	FInputModeUIOnly InputMode;
+	if (CurrentWidget)
+	{
+		InputMode.SetWidgetToFocus(CurrentWidget->TakeWidget());
+	}
+
+	APlayerController* PC = Cast<APlayerController>(GetController());
+	if (PC)
+	{
+		PC->SetInputMode(InputMode);
+		PC->bShowMouseCursor = true;
+	}
 }

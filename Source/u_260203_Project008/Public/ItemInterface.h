@@ -13,9 +13,6 @@ class UItemInterface : public UInterface
 	GENERATED_BODY()
 };
 
-/**
- * 
- */
 class U_260203_PROJECT008_API IItemInterface
 {
 	GENERATED_BODY()

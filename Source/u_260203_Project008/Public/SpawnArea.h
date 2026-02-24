@@ -18,9 +18,6 @@ public:
 	// Sets default values for this actor's properties
 	ASpawnArea();
 	
-    UFUNCTION(BlueprintCallable, Category = "Spawning")
-    AActor* SpawnRandomItem();
-	
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Spawning")
     USceneComponent* Scene;
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Spawning")
@@ -31,7 +28,6 @@ public:
 
 	UFUNCTION(BlueprintCallable, Category="Spawning")
     FVector GetRandomPointInVolume() const;
-    FItemSpawnRow* GetRandomItem() const;
     UFUNCTION(BlueprintCallable, Category="Spawning")
     AActor* SpawnItem(TSubclassOf<AActor> ItemClass);
 };

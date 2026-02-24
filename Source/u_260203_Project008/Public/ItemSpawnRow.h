@@ -13,9 +13,7 @@ struct FItemSpawnRow : public FTableRowBase
 
 public:
     UPROPERTY(EditAnywhere, BlueprintReadWrite)
-    FName ItemName;
-    UPROPERTY(EditAnywhere, BlueprintReadWrite)
     TSubclassOf<AActor> ItemClass;
     UPROPERTY(EditAnywhere, BlueprintReadWrite)
-    float SpawnProbability;
+    int32 SpawnCount;
 };

@@ -46,16 +46,32 @@ class Au_260203_Project008Character : public ACharacter
 
 public:
 	Au_260203_Project008Character();
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "UI")
+	TSubclassOf<UUserWidget> HUDWidgetStart;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "UI")
+	TSubclassOf<UUserWidget> HUDWidgetIngame;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "UI")
+	TSubclassOf<UUserWidget> HUDWidgetEnd;
 	
     UFUNCTION(BlueprintPure, Category = "Health")
     int32 GetHealth() const;
+	UFUNCTION(BlueprintPure, Category = "Health")
+	int32 GetMaxHealth() const;
     UFUNCTION(BlueprintCallable, Category = "Health")
     void AddHealth(float Amount);
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "UI")
-    TSubclassOf<UUserWidget> HUDWidgetClass;
+	UFUNCTION(BlueprintCallable, Category = "UI")
+	void ChangeMenuWidget(TSubclassOf<UUserWidget> NewWidgetClass);
+	UFUNCTION(BlueprintCallable, Category = "UI")
+	void StartGame();
+	UFUNCTION(BlueprintCallable, Category = "UI")
+	void EndGame();
 
 protected:
+	UPROPERTY()
+	UUserWidget* CurrentWidget;
+
 	virtual void BeginPlay() override;
 
 	/** Called for movement input */
@@ -76,7 +92,6 @@ protected:
 		struct FDamageEvent const& DamageEvent,
 		AController* EventInstigator,
 		AActor* DamageCauser) override;
-protected:
 
 	virtual void NotifyControllerChanged() override;
 

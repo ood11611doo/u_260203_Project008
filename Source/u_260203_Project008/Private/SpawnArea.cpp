@@ -18,18 +18,6 @@ ASpawnArea::ASpawnArea()
     SpawningBox->SetupAttachment(Scene);
 }
 
-AActor* ASpawnArea::SpawnRandomItem()
-{
-    if (FItemSpawnRow* SelectedRow = GetRandomItem())
-    {
-        if (UClass* ActualClass = SelectedRow->ItemClass.Get())
-        {
-            return SpawnItem(ActualClass);
-        }
-    }
-    return nullptr;
-}
-
 FVector ASpawnArea::GetRandomPointInVolume() const
 {
     FVector BoxExtent = SpawningBox->GetScaledBoxExtent();
@@ -39,39 +27,6 @@ FVector ASpawnArea::GetRandomPointInVolume() const
         FMath::FRandRange(-BoxExtent.Y, BoxExtent.Y),
         FMath::FRandRange(-BoxExtent.Z, BoxExtent.Z)
     );
-}
-
-FItemSpawnRow* ASpawnArea::GetRandomItem() const
-{
-    if (!ItemDataTable) return nullptr;
-    TArray<FItemSpawnRow*> AllRows;
-    static const FString ContextString(TEXT("ItemSpawnContext"));
-    ItemDataTable->GetAllRows(ContextString, AllRows);
-
-    if (AllRows.IsEmpty()) return nullptr;
-
-	float TotalChance = 0.0f;
-	for (const FItemSpawnRow* Row : AllRows)
-	{
-	    if (Row)
-	    {
-	        TotalChance += Row->SpawnProbability;
-	    }
-	}
-
-    const float RandValue = FMath::FRandRange(0.0f, TotalChance);
-    float AccumulateChance = 0.0f;
-
-    for (FItemSpawnRow* Row : AllRows)
-    {
-        AccumulateChance += Row->SpawnProbability;
-        if (RandValue <= AccumulateChance)
-        {
-            return Row;
-        }
-    }
-
-    return nullptr;
 }
 
 AActor* ASpawnArea::SpawnItem(TSubclassOf<AActor> ItemClass)

@@ -3,12 +3,40 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "ItemSpawnRow.h"
 #include "GameFramework/GameState.h"
 #include "NewGameState.generated.h"
 
-/**
- * 
- */
+UENUM(BlueprintType)
+enum class EMatchState : uint8
+{
+	WaitingToStart,
+	Playing,
+	GameOver
+};
+
+USTRUCT(BlueprintType)
+struct FWaveInfo
+{
+	GENERATED_BODY()
+
+	UPROPERTY(EditAnywhere)
+	float WaveTime;
+	UPROPERTY(EditAnywhere)
+	UDataTable* ItemSpawnData;
+};
+
+USTRUCT(BlueprintType)
+struct FStageInfo
+{
+	GENERATED_BODY()
+
+	UPROPERTY(EditAnywhere)
+	FName LevelMapName;
+	UPROPERTY(EditAnywhere)
+	TArray<FWaveInfo> WaveInfo;
+};
+
 UCLASS()
 class U_260203_PROJECT008_API ANewGameState : public AGameState
 {
@@ -18,6 +46,13 @@ public:
     ANewGameState();
 
 	virtual void BeginPlay() override;
+
+	void StartGame();
+	UFUNCTION(BlueprintCallable, Category = "Game")
+	void ResetData();
+
+	UPROPERTY(BlueprintReadOnly, Category = "State")
+	EMatchState CurrentState = EMatchState::WaitingToStart;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Score")
 	int32 Score;
@@ -31,9 +66,13 @@ public:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Level")
 	int32 CurrentLevelIndex;
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Level")
+	int32 CurrentWave;
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Level")
 	int32 MaxLevels;
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Level")
+	int32 MaxWavePerLevel;
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Level")
-	TArray<FName> LevelMapNames;
+	TArray<FStageInfo> LevelDatas;
 	
 	FTimerHandle LevelTimerHandle;
 	FTimerHandle HUDUpdateTimerHandle;
@@ -45,9 +84,18 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Level")
 	void OnGameOver();
 
+	UFUNCTION(BlueprintCallable, Category = "Game Statistics")
+	void ResetElapsedTime();
+
+	void SetState(EMatchState NewState) { CurrentState = NewState; }
 	void StartLevel();
 	void OnLevelTimeUp();
 	void OnCoinCollected();
+	void EndCheck();
+	void EndWave();
 	void EndLevel();
-	void UpdateHUD();
+
+protected:
+	UPROPERTY()
+	TArray<AActor*> SpawnedItems;
 };
